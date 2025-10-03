@@ -1,0 +1,42 @@
+{{- $app := index .Values.applications "roadshow_vms" }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: roadshow-vms
+  namespace: openshift-gitops
+spec:
+  project: default
+  generators:
+  - list:
+      elements:
+{{- $userCount := int .Values.user.count }}
+{{- range $index := until $userCount }}
+      - user: {{ $.Values.user.prefix }}{{ add $index 1}}
+{{- end }}
+  template:
+    metadata:
+      name: roadshow-vms-{{- "{{" }} user {{- " }}" }}
+      namespace: openshift-gitops
+    {{- include "app.source" (dict "root" $ "app" $app) | nindent 4 }}
+      project: default
+      helm:
+        values: |
+          username: '{{- "{{" }} user {{- " }}" }}'
+          deployer:
+            domain: {{ .Values.deployer.domain }}
+            apiUrl: {{ .Values.deployer.apiUrl }}
+      ignoreDifferences:
+      - group: "kubevirt.io"
+        kind: "VirtualMachine"
+        jsonPointers:
+        - /spec/template/spec/domain/cpu
+      - group: "apps"
+        kind: "Deployment"
+        jsonPointers:
+        - /spec/replicas
+        - /spec/template/spec/containers
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated: {}
