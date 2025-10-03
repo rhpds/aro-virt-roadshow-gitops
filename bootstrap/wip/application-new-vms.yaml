@@ -1,9 +1,9 @@
-{{- $app := index .Values.applications "new_vms" }}
+{{- $app := index .Values.applications "roadshow-vms" }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: new-vms
+  name: roadshow-vms
   namespace: openshift-gitops
 spec:
   project: default
