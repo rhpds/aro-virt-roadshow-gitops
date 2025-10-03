@@ -20,13 +20,14 @@ spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
+        namespace: vmimports-user{{`{{.user}}`}}
       source:
         repoURL: https://github.com/rhpds/aro-virt-roadshow-gitops.git
         targetRevision: main
         path: roadshow-vms
         helm:
           values: |
-            namespace: vmimports-user{{`{{.user}}`}}
+            username: user{{`{{.user}}`}}
       ignoreDifferences:
         - group: "kubevirt.io"
           kind: "VirtualMachine"
