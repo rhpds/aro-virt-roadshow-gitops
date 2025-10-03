@@ -19,13 +19,14 @@ spec:
       name: roadshow-vms-{{- "{{" }} user {{- " }}" }}
       namespace: openshift-gitops
     spec:
-    {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
       project: default
-      helm:
-        values: |
-          deployer:
-            domain: {{ .Values.deployer.domain }}
-            apiUrl: {{ .Values.deployer.apiUrl }}
+      {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
+        helm:
+          values: |
+            username: user{{- "{{" }} user {{- " }}" }}
+            deployer:
+              domain: {{ .Values.deployer.domain }}
+              apiUrl: {{ .Values.deployer.apiUrl }}
       ignoreDifferences:
       - group: "kubevirt.io"
         kind: "VirtualMachine"
