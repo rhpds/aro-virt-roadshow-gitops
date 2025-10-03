@@ -5,6 +5,7 @@ metadata:
   name: roadshow-vms
   namespace: openshift-gitops
 spec:
+  goTemplate: true
   generators:
     - list:
         elements:
