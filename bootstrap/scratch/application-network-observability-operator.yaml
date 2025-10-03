@@ -1,0 +1,15 @@
+{{- $app := index .Values.applications "network_observability_operator" }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: network-observability-operator
+  namespace: openshift-gitops
+spec:
+  project: default
+  {{- include "app.source" (dict "root" $ "app" $app) | nindent 2 }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $app.destination.namespace }}
+  syncPolicy:
+    automated: {}

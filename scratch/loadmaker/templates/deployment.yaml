@@ -1,0 +1,49 @@
+{{- $app := index .Values.applications "loadmaker" }}
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: loadmaker
+  namespace: {{ $app.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadmaker
+  template:
+    metadata:
+      labels:
+        app: loadmaker
+    spec:
+      containers:
+        - name: container
+          image: quay.io/rhpds/loadtest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: REQUESTS_PER_SECOND
+              value: '2'
+            - name: DURATION
+              value: '10000'
+            - name: URL
+              # value: 'http://istio-ingressgateway-istio-system.apps.virt-cluster.vew1.p1.openshiftapps.com'
+              value: 'https://{{ $app.deployment.route }}-{{ $app.deployment.namespace }}.{{ .Values.deployer.domain }}'
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

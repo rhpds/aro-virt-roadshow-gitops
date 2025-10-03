@@ -1,0 +1,27 @@
+# Default values for datavolumes.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+deployer:
+  domain: REPLACEME-OPENSHIFT_DOMAIN
+  apiUrl: https://api.cluster.opentlc.com:6443
+
+ingressgatway_url_path: https://localhost
+
+datavolumes:
+  namespace: default
+  imageUrl: "http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt"
+  volumes:
+  # - name: database
+  - object_name: demo-database-centos7-20250408.qcow2
+    volume_name: database
+    size: 16Gi
+    volumeSnapshotClassName: ocs-external-storagecluster-rbdplugin-snapclass
+  - object_name: demo-winweb01-w2k22-20250410.qcow2
+    volume_name: winweb01
+    size: 90Gi
+    volumeSnapshotClassName: ocs-external-storagecluster-rbdplugin-snapclass
+  - object_name: demo-winweb02-w2k22-20250410.qcow2
+    volume_name: winweb02
+    size: 90Gi
+    volumeSnapshotClassName: ocs-external-storagecluster-rbdplugin-snapclass

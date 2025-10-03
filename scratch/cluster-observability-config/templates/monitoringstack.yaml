@@ -1,0 +1,44 @@
+{{- with .Values.cluster_observability_config }}
+---
+apiVersion: monitoring.rhobs/v1alpha1
+kind: MonitoringStack
+metadata:
+  name: my-coo-monitoring-stack
+  namespace: {{ .namespace }}
+spec:
+  alertmanagerConfig:
+    disabled: false
+  logLevel: debug
+  namespaceSelector:
+    matchLabels:
+      monitoring.rhobs: coo-stack
+  prometheusConfig:
+    replicas: 2
+  resourceSelector:
+    matchLabels:
+      k8s-app: prometheus-coo-monitor
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  retention: 16d
+---
+apiVersion: monitoring.rhobs/v1
+kind: ServiceMonitor
+metadata:
+ labels:
+   k8s-app: prometheus-coo-monitor
+ name: coo-servicemonitor
+ namespace: {{ .namespace }}
+spec:
+ endpoints:
+ - interval: 30s
+   port: web
+   scheme: http
+ selector:
+   matchLabels:
+     app: prometheus-coo
+{{- end }}

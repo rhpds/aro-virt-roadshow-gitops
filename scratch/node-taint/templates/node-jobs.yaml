@@ -1,0 +1,151 @@
+{{- $app := index .Values.applications "node_taint" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-taint-job
+  namespace: {{ $app.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-taint-job
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: node-taint-job
+  namespace: {{ $app.namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: node-taint-job
+  namespace: {{ $app.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: node-taint-job
+      containers:
+      - name: node-taint-patch
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "######################"
+          echo "# taint last two worker nodes"
+          echo "######################"
+          oc adm taint node $(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[-2:].metadata.name}') key=virtualization:NoSchedule
+          echo
+
+          echo "######################"
+          echo "# create infra nodes if necessary"
+          echo "######################"
+          NODES=($(oc get nodes -l node-role.kubernetes.io=infra,node-role.kubernetes.io/infra='' --sort-by=.metadata.name -o jsonpath='{.items[*].metadata.name}'))
+          if [ "${#NODES[@]}" -eq "0" ]; then
+            printf "%s\n" "${NODES[@]}"
+            echo
+            echo "######################"
+            echo "# label nodes for infra nodes"
+            echo "######################"
+            WORKERNODES=($(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[0:2].metadata.name}' --sort-by=.metadata.name))
+            for NODE_NAME in "${WORKERNODES[@]}"; do
+              # label infra nodes
+              echo "######################"
+              echo "node: $NODE_NAME"
+              oc label node $NODE_NAME node-role.kubernetes.io-
+              oc label node $NODE_NAME node-role.kubernetes.io/worker-
+              oc label node $NODE_NAME node-role.kubernetes.io/infra=
+              oc label node $NODE_NAME node-role.kubernetes.io=infra
+            done
+            echo "######################"
+            echo "# taint infra nodes"
+            echo "######################"
+            oc adm taint nodes -l node-role.kubernetes.io/infra node-role.kubernetes.io/infra=reserved:NoSchedule node-role.kubernetes.io/infra=reserved:NoExecute
+            echo
+          fi
+
+          echo "######################"
+          echo "# reconfigure the default ingress controller"
+          echo "######################"
+          echo "# remove need for worker node-role"
+          oc patch ingresscontroller/default -n  openshift-ingress-operator  --type=merge -p '{"spec":{"nodePlacement": {"nodeSelector": {"matchLabels": {"node-role.kubernetes.io/infra": ""}},"tolerations": [{"effect":"NoSchedule","key": "node-role.kubernetes.io/infra","value": "reserved"},{"effect":"NoExecute","key": "node-role.kubernetes.io/infra","value": "reserved"}]}}}'
+          # add infra node role
+          echo "# add infra node role"
+          oc patch ingresscontroller/default -n openshift-ingress-operator --type=merge -p '{"spec":{"nodePlacement":{"nodeSelector":{"matchLabels": {"node-role.kubernetes.io/worker": null }}}}}'
+          # two replicas
+          echo "# two replicas"
+          oc patch ingresscontroller/default -n openshift-ingress-operator --type=merge -p '{"spec":{"replicas": 2}}'
+          echo
+
+          echo "######################"
+          echo "# move the registry to the infra nodes"
+          echo "######################"
+          oc patch configs.imageregistry.operator.openshift.io/cluster --type=merge -p '{"spec":{"nodeSelector": {"node-role.kubernetes.io/infra": ""},"tolerations": [{"effect":"NoSchedule","key": "node-role.kubernetes.io/infra","value": "reserved"},{"effect":"NoExecute","key": "node-role.kubernetes.io/infra","value": "reserved"}]}}'
+
+          echo "######################"
+          echo "# fix ceph-operator-config configmap"
+          echo "######################"
+          # If I delete first sometimes there's race conditions.
+          # oc delete configmap rook-ceph-operator-config -n openshift-storage
+          echo "oc apply to fix ceph-operator-config configmap"
+          cat <<EOF | oc apply -f -
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: rook-ceph-operator-config
+            namespace: openshift-storage
+          data:
+            CSI_PLUGIN_TOLERATIONS: |-
+              - key: node-role.kubernetes.io/infra
+                operator: Equal
+                value: "reserved"
+                effect: NoSchedule
+              - key: node-role.kubernetes.io/infra
+                operator: Equal
+                value: "reserved"
+                effect: NoExecute
+              - key: key
+                operator: Equal
+                value: "virtualization"
+                effect: NoSchedule
+          EOF
+          # delete rook operator pods to bump the movement of the infranodes.
+          # but will have to find the name of the rook operator pod
+          oc delete -n openshift-storage pod -l app=rook-ceph-operator
+
+          # # label for vmhost nodes (regular worker nodes)
+          # echo "######################"
+          # echo "# label for vmhost nodes"
+          # echo "######################"
+          # VMHOST_NODES=($(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{.items[*].metadata.name}' --sort-by=.metadata.name))
+          # for NODE_NAME in "${VMHOST_NODES[@]}"; do
+          #   # label vmhost nodes
+          #   echo "node: $NODE_NAME"
+          #   oc label node $NODE_NAME vmhost=true
+          # done
+
+          # # remove VM scheduling from infra nodes
+          # echo "######################"
+          # echo "# remove VM scheduling"
+          # echo "######################"
+          # NODE_NAMES=($(oc get nodes -l node-role.kubernetes.io/infra -o jsonpath='{.items[0:2].metadata.name}' --sort-by=.metadata.name))
+          # for NODE_NAME in "${NODE_NAMES[@]}"; do
+          #   echo "node: $NODE_NAME"
+          #   echo "#  oc label node $NODE_NAME kubevirt.io/schedulable-"
+          #   oc label node $NODE_NAME kubevirt.io/schedulable-
+          # done
+          # echo

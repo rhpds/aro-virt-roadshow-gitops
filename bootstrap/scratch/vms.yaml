@@ -1,0 +1,93 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.vms_namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    openshift.io/description: "Virtual Machines AAP Day 2"
+    openshift.io/display-name: "VMs AAP Day 2"
+{{- range .Values.vms }}
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+type: Opaque
+data:
+  key: {{ .sshPublicKey }}
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  instancetype:
+    name: u1.small
+  preference:
+    name: rhel.9
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        network.kubevirt.io/headlessService: headless
+    spec:
+      domain:
+        devices:
+          autoattachPodInterface: false
+          interfaces:
+          - name: default
+            masquerade: {}
+      networks:
+        - name: default
+          pod: {}
+      subdomain: headless
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: {{ .name }}
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            user: rhel
+            password: openshift
+            chpasswd:
+              expire: false
+            ssh_pwauth: true
+      accessCredentials:
+      - sshPublicKey:
+          propagationMethod:
+            noCloud: {}
+          source:
+            secret:
+              secretName: {{ .name }}
+  dataVolumeTemplates:
+  - metadata:
+      name: {{ .name }}
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: rhel9
+        namespace: openshift-virtualization-os-images
+      storage:
+        resources: {}
+{{- end }}

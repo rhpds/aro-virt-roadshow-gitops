@@ -1,0 +1,27 @@
+# Default values for loadmaker
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+deployer:
+  domain: REPLACEME-OPENSHIFT_DOMAIN
+  apiUrl: https://api.cluster.opentlc.com:6443
+
+ingressgatway_url_path: https://localhost
+
+applications:
+  udn:
+    enabled: true
+    # numberOfNamespaces: 2
+    # bridgeType: ovs-bridge
+    # multi_user: false
+    # config_networks: "{{ ai_attach_workers_networks | default([]) }}"
+    # ocp4_workload_virt_network_config_bridge_name: br1
+    # # Port to attach the bridge
+    # ocp4_workload_virt_network_config_bridge_port: enp3s0
+    # # Local network to attach the bridge (for ovs-bridge)
+    # ocp4_workload_virt_network_config_bridge_network: localnet2
+
+
+# TASK [ocp4_workload_virt_network_config : Create NNCP (linux-bridge)] **********
+# Wednesday 13 August 2025  14:46:16 +0000 (0:00:00.050)       1:41:10.900 ******
+# fatal: [bastion]: FAILED! => {"changed": false, "msg": "Failed to find exact match for nmstate.io/v1.NodeNetworkConfigurationPolicy by [kind, name, singularName, shortNames]"}

@@ -1,0 +1,21 @@
+---
+apiVersion: flows.netobserv.io/v1beta2
+kind: FlowCollector
+metadata:
+  name: cluster
+  namespace: openshift-netobserv-operator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  namespace: netobserv
+  consolePlugin:
+    enable: true
+  prometheus:
+    querier:
+      manual:
+        url: http://prometheus:9090
+  loki:
+    mode: LokiStack
+    lokiStack:
+      name: loki

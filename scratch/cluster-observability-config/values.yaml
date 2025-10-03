@@ -1,0 +1,18 @@
+# Default values for cluster-observability-config.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+user:
+  count: 2
+  base: user
+
+deployer:
+  domain: apps.cluster-guid.sandbox.opentlc.com
+  apiUrl: https://api.cluster-guid.sandbox.opentlc.com:6443
+
+cluster_observability_config:
+  git:
+    url: https://github.com/rhpds/ocp-virt-advanced-ops-gitops.git
+    revision: main
+    path: cluster-observability-config
+  namespace: openshift-cluster-observability-operator

@@ -1,0 +1,44 @@
+# Default values for loadmaker
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+deployer:
+  domain: REPLACEME-OPENSHIFT_DOMAIN
+  apiUrl: https://api.cluster.opentlc.com:6443
+
+ingressgatway_url_path: https://localhost
+
+new_vms:
+  imageUrl: "http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt"
+  webappVms:
+    count: 1
+    namespace: webapp-vms
+    create_route: true
+    route: webapp
+    runStrategy: "RerunOnFailure"
+    evictionStrategy: "LiveMigrate"
+    machineType: q35
+    cluster_monitoring_label: "monitoring.rhobs: coo-stack" # empty disabled
+    loadtest:
+      namespace: webapp-vms
+      route: webapp
+      requests_per_second: 2
+  massVms:
+    count: 12
+    namespace: mass-vms
+    create_route: true
+    route: mass
+    runStrategy: "Manual"
+    evictionStrategy: "LiveMigrate"
+    machineType: q35
+    cluster_monitoring_label: "" # empty disabled
+    loadtest:
+      namespace: mass-vms
+      route: mass
+      requests_per_second: 100
+
+applications:
+  loadmaker:
+    deployment:
+      namespace: vms-aap-day2
+      route: vms
