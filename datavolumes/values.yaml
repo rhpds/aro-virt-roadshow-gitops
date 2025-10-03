@@ -2,17 +2,10 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-deployer:
-  domain: REPLACEME-OPENSHIFT_DOMAIN
-  apiUrl: https://api.cluster.opentlc.com:6443
-
-ingressgatway_url_path: https://localhost
-
 datavolumes:
   namespace: default
   imageUrl: "http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt"
   volumes:
-  # - name: database
   - object_name: demo-database-centos7-20250408.qcow2
     volume_name: database
     size: 16Gi
