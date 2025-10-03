@@ -23,7 +23,7 @@ spec:
       source:
         repoURL: https://github.com/rhpds/aro-virt-roadshow-gitops.git
         targetRevision: main
-        path: /roadshow-vms
+        path: roadshow-vms
         helm:
           values: |
             namespace: vmimports-user{{`{{.user}}`}}
