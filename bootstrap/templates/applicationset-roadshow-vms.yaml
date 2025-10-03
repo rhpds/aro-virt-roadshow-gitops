@@ -6,38 +6,36 @@ metadata:
   name: roadshow-vms
   namespace: openshift-gitops
 spec:
-  project: default
   generators:
-  - list:
-      elements:
-{{- $userCount := int .Values.user.count }}
-{{- range $index := until $userCount }}
-      - user: {{ $.Values.user.prefix }}{{ add $index 1}}
-{{- end }}
+    - list:
+        elements:
+  {{- $userCount := int .Values.user.count }}
+  {{- range $index := until $userCount }}
+          - user: {{ $.Values.user.prefix }}{{ add $index 1}}
+  {{- end }}
   template:
     metadata:
       name: roadshow-vms-{{- "{{" }} user {{- " }}" }}
-      namespace: openshift-gitops
     spec:
       project: default
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: vmimports-user{{`{{user}}`}}
       {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
         helm:
           values: |
-            username: user{{- "{{" }} user {{- " }}" }}
-            deployer:
-              domain: {{ .Values.deployer.domain }}
-              apiUrl: {{ .Values.deployer.apiUrl }}
+        namespace: vmimports-user{{`{{user}}`}}
       ignoreDifferences:
-      - group: "kubevirt.io"
-        kind: "VirtualMachine"
-        jsonPointers:
-        - /spec/template/spec/domain/cpu
-      - group: "apps"
-        kind: "Deployment"
-        jsonPointers:
-        - /spec/replicas
-        - /spec/template/spec/containers
-      destination:
-        server: https://kubernetes.default.svc
+        - group: "kubevirt.io"
+          kind: "VirtualMachine"
+          jsonPointers:
+          - /spec/template/spec/domain/cpu
+        - group: "apps"
+          kind: "Deployment"
+          jsonPointers:
+          - /spec/replicas
+          - /spec/template/spec/containers
       syncPolicy:
         automated: {}
+        syncOptions:
+          - CreateNamespace=true
