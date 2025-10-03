@@ -20,14 +20,13 @@ roadshow_vms:
   - name: winweb02
     size: 90Gi
   webappVms:
-    count: 12
     namespace_prefix: vmimported-
+    create_services: true
     create_route: true
     route: webapp
     runStrategy: "Manual"
     evictionStrategy: "LiveMigrate"
     machineType: q35
-    cluster_monitoring_label: "" # empty disabled
     enableNodeSelector: true
     nodeSelector: "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest: 'true'"
     enableProjectRequestTemplateNodeSelectorAnnotation: false

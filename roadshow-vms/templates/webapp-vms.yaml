@@ -36,7 +36,63 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
   name: admin
-# create the loadtest
+{{- if .create_services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: {{ .namespace_prefix }}{{ $.Values.username }}
+roleRef:
+spec:
+  selector:
+    vm.kubevirt.io/name: database
+  ports:
+  - protocol: TCP
+    name: mysql
+    port: 3306
+    targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp
+  namespace: {{ .namespace_prefix }}{{ $.Values.username }}
+spec:
+  selector:
+    env: webapp
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 80
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+{{- end }}
+{{- if .create_route }}
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .route }}
+  namespace: {{ .namespace_prefix }}{{ $.Values.username }}
+  annotations:
+    haproxy.router.openshift.io/disable_cookies: "true"
+spec:
+  host: {{ .route }}-{{ .namespace }}.{{ $.Values.deployer.domain }}
+  path: /
+  to:
+    kind: Service
+    name: {{ .route }}
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+{{- end }}
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -48,7 +104,7 @@ metadata:
   labels:
     app: database
     app.kubernetes.io/part-of: 3-Tier-App
-  name: database
+  name: database-{{ $.Values.username }}
   namespace: {{ .namespace_prefix }}{{ $.Values.username }}
 spec:
   dataVolumeTemplates:
@@ -81,6 +137,7 @@ spec:
       labels:
         kubevirt.io/domain: database
         kubevirt.io/size: small
+        app: database-{{ $.Values.username }}
     spec:
       {{- if .enableNodeSelector }}
       nodeSelector:
@@ -134,7 +191,7 @@ metadata:
     app.kubernetes.io/part-of: 3-Tier-App
     vm.kubevirt.io/template.revision: '1'
     vm.kubevirt.io/template.version: v0.25.0
-  name: winweb01
+  name: winweb01-{{ $.Values.username }}
   namespace: {{ .namespace_prefix }}{{ $.Values.username }}
 spec:
   dataVolumeTemplates:
@@ -162,7 +219,7 @@ spec:
       annotations:
         descheduler.alpha.kubernetes.io/evict: "true"
       labels:
-        env: webapp
+        app: winweb01-{{ $.Values.username }}
     spec:
       {{- if .enableNodeSelector }}
       nodeSelector:
@@ -244,7 +301,7 @@ metadata:
     app.kubernetes.io/part-of: 3-Tier-App
     vm.kubevirt.io/template.revision: '1'
     vm.kubevirt.io/template.version: v0.25.0
-  name: winweb02
+  name: winweb02-{{ $.Values.username }}
   namespace: {{ .namespace_prefix }}{{ $.Values.username }}
 spec:
   dataVolumeTemplates:
@@ -272,7 +329,7 @@ spec:
       annotations:
         descheduler.alpha.kubernetes.io/evict: "true"
       labels:
-        env: webapp
+        app: winweb02-{{ $.Values.username }}
     spec:
       {{- if .enableNodeSelector }}
       nodeSelector:
