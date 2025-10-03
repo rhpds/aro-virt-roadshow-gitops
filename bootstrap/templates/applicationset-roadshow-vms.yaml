@@ -1,4 +1,3 @@
-{{- $app := index .Values.applications "roadshow_vms" }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
@@ -15,16 +14,18 @@ spec:
   {{- end }}
   template:
     metadata:
-      name: roadshow-vms-{{`{{.user}}`}}
+      name: 'roadshow-vms-{{`{{.user}}`}}'
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: vmimports-user{{`{{.user}}`}}
-      {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
+      source:
+        repoURL: https://github.com/rhpds/aro-virt-roadshow-gitops.git
+        targetRevision: main
+        path: /roadshow-vms
         helm:
           values: |
-        namespace: vmimports-user{{`{{.user}}`}}
+            namespace: vmimports-user{{`{{.user}}`}}
       ignoreDifferences:
         - group: "kubevirt.io"
           kind: "VirtualMachine"
