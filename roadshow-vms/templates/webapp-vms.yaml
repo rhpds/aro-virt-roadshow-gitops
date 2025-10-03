@@ -46,7 +46,7 @@ metadata:
 roleRef:
 spec:
   selector:
-    vm.kubevirt.io/name: database
+    vm.kubevirt.io/name: database-{{ $.Values.username }}
   ports:
   - protocol: TCP
     name: mysql
@@ -75,16 +75,16 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: {{ .route }}
+  name: webapp
   namespace: {{ .namespace_prefix }}{{ $.Values.username }}
   annotations:
     haproxy.router.openshift.io/disable_cookies: "true"
 spec:
-  host: {{ .route }}-{{ .namespace }}.{{ $.Values.deployer.domain }}
+  host: webapp-{{ .namespace_prefix }}{{ $.Values.username }}.{{ $.Values.deployer.domain }}
   path: /
   to:
     kind: Service
-    name: {{ .route }}
+    name: webapp
     weight: 100
   port:
     targetPort: http

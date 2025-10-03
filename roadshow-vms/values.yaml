@@ -21,9 +21,8 @@ roadshow_vms:
     size: 90Gi
   webappVms:
     namespace_prefix: vmimported-
-    create_services: true
-    create_route: true
-    route: webapp
+    create_services: false
+    create_route: false
     runStrategy: "Manual"
     evictionStrategy: "LiveMigrate"
     machineType: q35
