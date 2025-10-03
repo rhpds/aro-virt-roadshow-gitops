@@ -23,7 +23,7 @@ spec:
       project: default
       helm:
         values: |
-          username: '{{- "{{" }} user {{- " }}" }}'
+          username: 'user{{- "{{" }} user {{- " }}" }}'
           deployer:
             domain: {{ .Values.deployer.domain }}
             apiUrl: {{ .Values.deployer.apiUrl }}
