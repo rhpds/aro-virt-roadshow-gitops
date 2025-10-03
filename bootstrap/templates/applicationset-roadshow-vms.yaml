@@ -18,7 +18,8 @@ spec:
     metadata:
       name: roadshow-vms-{{- "{{" }} user {{- " }}" }}
       namespace: openshift-gitops
-    {{- include "app.source" (dict "root" $ "app" $app) | nindent 4 }}
+    spec:
+    {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
       project: default
       helm:
         values: |
