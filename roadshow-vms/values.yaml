@@ -1,0 +1,38 @@
+# Default values for vms.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+username: REPLACEME_USERNAME
+
+deployer:
+  domain: REPLACEME-OPENSHIFT_DOMAIN
+  apiUrl: https://api.cluster.opentlc.com:6443
+
+ingressgatway_url_path: https://localhost
+
+roadshow_vms:
+  imageUrl: "http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt"
+  dataVolumes:
+  - name: database
+    size: 16Gi
+  - name: winweb01
+    size: 90Gi
+  - name: winweb02
+    size: 90Gi
+  webappVms:
+    count: 12
+    namespace_prefix: vmimported-
+    create_route: true
+    route: webapp
+    runStrategy: "Manual"
+    evictionStrategy: "LiveMigrate"
+    machineType: q35
+    cluster_monitoring_label: "" # empty disabled
+    enableNodeSelector: true
+    nodeSelector: "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest: 'true'"
+    enableProjectRequestTemplateNodeSelectorAnnotation: false
+    nodeSelectorAnnotation: "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest=true"
+# ocp4_workload_virt_roadshow_vms_project_request_annotation: "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest=true"
+# ocp4_workload_virt_roadshow_vms_node_selector_enabled: false
+# ocp4_workload_virt_roadshow_vms_node_selector: "cpu-feature.node.kubevirt.io/vmx-unrestricted-guest: 'true'"
+# ocp4_workload_virt_roadshow_vms_project_request_template: false
