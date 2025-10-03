@@ -15,16 +15,16 @@ spec:
   {{- end }}
   template:
     metadata:
-      name: roadshow-vms-{{- "{{" }} user {{- " }}" }}
+      name: roadshow-vms-{{`{{.user}}`}}
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: vmimports-user{{`{{user}}`}}
+        namespace: vmimports-user{{`{{.user}}`}}
       {{- include "app.source" (dict "root" $ "app" $app) | nindent 6 }}
         helm:
           values: |
-        namespace: vmimports-user{{`{{user}}`}}
+        namespace: vmimports-user{{`{{.user}}`}}
       ignoreDifferences:
         - group: "kubevirt.io"
           kind: "VirtualMachine"
