@@ -10,6 +10,9 @@ user:
   count: 2
   base: user
 
+machineset_scale:
+  count: 2
+
 default:
   environment: prod
   source:

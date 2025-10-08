@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: machineset-scale
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rhpds/aro-virt-roadshow-gitops.git
+    targetRevision: main
+    path: machineset-scale
+    helm:
+      values: |
+        machineset_scale:
+          count: {{ .Values.machineset_scale.count }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated: {}
