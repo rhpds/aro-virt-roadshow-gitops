@@ -56,9 +56,9 @@ spec:
 
           COUNT={{ .Values.machineset_scale.count }}
 
-          A=$((COUNT / 3 + (COUNT % 3 > 0 ? 1 : 0)))
-          B=$((COUNT / 3 + (COUNT % 3 > 1 ? 1 : 0)))
-          C=$((COUNT / 3))
+          A=$((COUNT / 3 + (COUNT % 3 > 0 ? 1 : 0)) + 1)
+          B=$((COUNT / 3 + (COUNT % 3 > 1 ? 1 : 0)) + 1)
+          C=$((COUNT / 3) + 1)
 
           oc scale --replicas=$A machineset/${MACHINESETS[0]} -n openshift-machine-api
           oc scale --replicas=$B machineset/${MACHINESETS[1]} -n openshift-machine-api
