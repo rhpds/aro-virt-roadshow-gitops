@@ -60,6 +60,7 @@ spec:
           B=$((COUNT / 3 + 1 +(COUNT % 3 > 1 ? 1 : 0)))
           C=$((COUNT / 3 + 1))
 
+          echo "COUNT=$COUNT"
           echo "A=$A"
           echo "B=$B"
           echo "C=$C"
