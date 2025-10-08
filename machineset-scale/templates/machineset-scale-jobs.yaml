@@ -60,6 +60,10 @@ spec:
           B=$((COUNT / 3 + 1 +(COUNT % 3 > 1 ? 1 : 0)))
           C=$((COUNT / 3 + 1))
 
+          echo "A=$A"
+          echo "B=$B"
+          echo "C=$C"
+
           oc scale --replicas=$A machineset/${MACHINESETS[0]} -n openshift-machine-api
           oc scale --replicas=$B machineset/${MACHINESETS[1]} -n openshift-machine-api
           oc scale --replicas=$C machineset/${MACHINESETS[2]} -n openshift-machine-api
