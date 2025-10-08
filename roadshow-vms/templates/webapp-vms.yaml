@@ -26,7 +26,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: admin
+  name: allow-admin-on-namespace-{{ .namespace_prefix }}{{ $.Values.username }}
   namespace: {{ .namespace_prefix }}{{ $.Values.username }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -35,7 +35,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: admin
+  name: {{ $.Values.username }}
 {{- if .create_services }}
 ---
 apiVersion: v1
