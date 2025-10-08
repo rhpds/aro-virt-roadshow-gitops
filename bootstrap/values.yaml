@@ -11,7 +11,7 @@ user:
   base: user
 
 machineset_scale:
-  count: 2
+  count: 6
 
 default:
   environment: prod
